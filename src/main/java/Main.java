@@ -1,10 +1,10 @@
 import java.util.*;
 
 public class Main {
+    public static final Map<Integer, Integer> SIZE_TO_FREQ = new HashMap<>();
+    public static int counting = 0;
 
-    public static final Map<Integer, Integer> sizeToFreq = new HashMap<>();
-
-    public static void main(String[] args) {
+    public static void main(String[] args) throws InterruptedException {
         for (int i = 0; i < 1000; i++) {
             Thread thread = new Thread(() -> {
                 String string = generateRoute("RLRFR", 100);
@@ -14,27 +14,36 @@ public class Main {
                         size++;
                     }
                 }
-                synchronized (sizeToFreq) {
-                    if (sizeToFreq.containsKey(size)) {
-                        sizeToFreq.put(size, sizeToFreq.get(size) + 1);
+                synchronized (SIZE_TO_FREQ) {
+                    if (SIZE_TO_FREQ.containsKey(size)) {
+                        SIZE_TO_FREQ.put(size, SIZE_TO_FREQ.get(size) + 1);
                     } else {
-                        sizeToFreq.put(size, 1);
+                        SIZE_TO_FREQ.put(size, 1);
+                    }
+                    counting++;
+                    if (counting == 1000) {
+                        SIZE_TO_FREQ.notify();
                     }
                 }
             });
             thread.start();
         }
         Map.Entry<Integer, Integer> maxValue = null;
-        for (Map.Entry<Integer, Integer> entry : sizeToFreq.entrySet()) {
-            if (maxValue == null || entry.getValue().compareTo(maxValue.getValue()) > 0) {
-                maxValue = entry;
+        synchronized (SIZE_TO_FREQ) {
+            if (counting < 1000) {
+                SIZE_TO_FREQ.wait();
             }
-        }
-        System.out.println("Самое частое количество повторений " + maxValue.getKey() + " (встретилось " + maxValue.getValue() + " раз) ");
-        System.out.println("Другие размеры ");
-        for (Map.Entry<Integer, Integer> entry : sizeToFreq.entrySet()) {
-            if (entry.getKey() != maxValue.getKey()) {
-                System.out.println("- " + entry.getKey() + " (" + entry.getValue() + " раз) ");
+            for (Map.Entry<Integer, Integer> entry : SIZE_TO_FREQ.entrySet()) {
+                if (maxValue == null || entry.getValue().compareTo(maxValue.getValue()) > 0) {
+                    maxValue = entry;
+                }
+            }
+            System.out.println("Самое частое количество повторений " + maxValue.getKey() + " (встретилось " + maxValue.getValue() + " раз) ");
+            System.out.println("Другие размеры ");
+            for (Map.Entry<Integer, Integer> entry : SIZE_TO_FREQ.entrySet()) {
+                if (entry.getKey() != maxValue.getKey()) {
+                    System.out.println("- " + entry.getKey() + " (" + entry.getValue() + " раз) ");
+                }
             }
         }
     }
