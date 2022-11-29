@@ -2,10 +2,10 @@ import java.util.*;
 
 public class Main {
     public static final Map<Integer, Integer> SIZE_TO_FREQ = new HashMap<>();
+    public static final int ITERATIONS = 1000;
     public static int counting = 0;
-
     public static void main(String[] args) throws InterruptedException {
-        for (int i = 0; i < 1000; i++) {
+        for (int i = 0; i < ITERATIONS; i++) {
             Thread thread = new Thread(() -> {
                 String string = generateRoute("RLRFR", 100);
                 int size = 0;
@@ -21,7 +21,7 @@ public class Main {
                         SIZE_TO_FREQ.put(size, 1);
                     }
                     counting++;
-                    if (counting == 1000) {
+                    if (counting == ITERATIONS) {
                         SIZE_TO_FREQ.notify();
                     }
                 }
@@ -30,7 +30,7 @@ public class Main {
         }
         Map.Entry<Integer, Integer> maxValue = null;
         synchronized (SIZE_TO_FREQ) {
-            if (counting < 1000) {
+            if (counting < ITERATIONS) {
                 SIZE_TO_FREQ.wait();
             }
             for (Map.Entry<Integer, Integer> entry : SIZE_TO_FREQ.entrySet()) {
@@ -41,7 +41,7 @@ public class Main {
             System.out.println("Самое частое количество повторений " + maxValue.getKey() + " (встретилось " + maxValue.getValue() + " раз) ");
             System.out.println("Другие размеры ");
             for (Map.Entry<Integer, Integer> entry : SIZE_TO_FREQ.entrySet()) {
-                if (entry.getKey() != maxValue.getKey()) {
+                if (!entry.getKey().equals(maxValue.getKey())) {
                     System.out.println("- " + entry.getKey() + " (" + entry.getValue() + " раз) ");
                 }
             }
